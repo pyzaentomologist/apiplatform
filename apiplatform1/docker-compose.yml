@@ -1,0 +1,44 @@
+networks:
+  api_network:  # Tworzymy własną sieć Docker
+    driver: bridge
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    container_name: php-apliplatform1
+    volumes:
+      - .:/var/www
+    ports:
+      - "8080:80"
+    depends_on:
+      - database
+    environment:
+      - DB_NAME=${POSTGRES_DB:-app}
+      - DB_USER=${POSTGRES_USER:-app}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-!ChangeMe!}
+    networks:
+      - api_network
+      
+###> doctrine/doctrine-bundle ###
+  database:
+    image: postgres:${POSTGRES_VERSION:-16}-alpine
+    container_name: api-platform-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      # You should definitely change the password in production
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+    volumes:
+      - database_data:/var/lib/postgresql/data:rw
+      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
+      # - ./docker/db/data:/var/lib/postgresql/data:rw
+    networks:
+      - api_network
+###< doctrine/doctrine-bundle ###
+
+volumes:
+###> doctrine/doctrine-bundle ###
+  database_data:
+###< doctrine/doctrine-bundle ###
